@@ -1,0 +1,4 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{color-scheme:dark}*{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:#080B12;color:#F4F7FC;font-family:Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}input,select,textarea{width:100%;border:1px solid #29364B;background:#0B111D;color:#F4F7FC;border-radius:10px;padding:11px 12px;outline:none}input:focus,select:focus,textarea:focus{border-color:#5B8CFF;box-shadow:0 0 0 3px rgba(91,140,255,.12)}
