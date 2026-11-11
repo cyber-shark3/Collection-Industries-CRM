@@ -170,3 +170,58 @@ end $$;
 
 -- Draft quotations are not sales; issued invoices are receivables, not proof of cash.
 -- Revenue recognition must follow each company's approved accounting policy.
+
+-- Create a profile automatically when a user registers with Supabase Auth.
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles(id, full_name, email)
+  values (
+    new.id,
+    coalesce(nullif(new.raw_user_meta_data->>'full_name',''), split_part(coalesce(new.email,''),'@',1)),
+    new.email
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created_profile on auth.users;
+create trigger on_auth_user_created_profile
+after insert on auth.users
+for each row execute procedure public.handle_new_auth_user();
+
+-- Bootstrap the first tenant and its owner membership for the signed-in user.
+create or replace function public.create_company_for_current_user(
+  company_legal_name text,
+  company_trading_name text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_company_id uuid;
+  current_user_id uuid := auth.uid();
+begin
+  if current_user_id is null then
+    raise exception 'Authentication is required to create a company';
+  end if;
+  if nullif(trim(company_legal_name), '') is null then
+    raise exception 'Company legal name is required';
+  end if;
+  insert into public.companies(legal_name, trading_name)
+  values (trim(company_legal_name), nullif(trim(company_trading_name), ''))
+  returning id into new_company_id;
+  insert into public.company_memberships(company_id, user_id, role)
+  values (new_company_id, current_user_id, 'owner');
+  return new_company_id;
+end;
+$$;
+revoke all on function public.create_company_for_current_user(text,text) from public;
+grant execute on function public.create_company_for_current_user(text,text) to authenticated;
