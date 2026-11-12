@@ -3,7 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ProjectionBuilder from "./projection-builder";
 
-export default async function FinancialProjectionsPage() {
+export default async function FinancialProjectionsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+  const params = await searchParams;
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect("/login");
@@ -25,7 +26,9 @@ export default async function FinancialProjectionsPage() {
             Prepare and review applicant projections using the five sections in the NYDF financial projection template. All figures are in Namibian dollars.
           </p>
         </div>
-        <ProjectionBuilder companies={companies ?? []} />
+        {params.saved && <p className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">Projection saved as a draft.</p>}
+        {params.error && <p className="mt-5 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">Could not save the projection. Check the applicant details and database migration.</p>}
+        {companies?.length ? <ProjectionBuilder companies={companies} /> : <div className="mt-7 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 text-sm text-amber-100">Create the applicant business in Companies before preparing its projection.</div>}
       </div>
     </main>
   );
