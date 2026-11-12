@@ -34,6 +34,6 @@ The source template does not provide assumptions or schedules for tax, depreciat
 
 - The initial workflow is for authenticated CI staff roles only.
 - The applicant client portal and applicant self-service access are not part of this first implementation.
-- Apply the migration only to a development Supabase project first; test RLS, role access, tenant isolation, validation, and persistence before production.
+- Apply the migration only to a development Supabase project first; test RLS, role access, creator scoping, tenant isolation, validation, and persistence before production. The current CRM foundation does not yet implement full company-membership isolation, so this module is not cleared for real applicant data.
 - Do not enter real applicant financial or identity documents until the database and storage security controls have been verified.
 - The app code being committed does not mean Supabase is connected or that production deployment is complete.
