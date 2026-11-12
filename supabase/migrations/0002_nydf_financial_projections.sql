@@ -27,7 +27,10 @@ alter table public.financial_projection_models enable row level security;
 
 create policy "Staff can read financial projections"
   on public.financial_projection_models for select to authenticated
-  using (public.current_user_role() in ('admin','manager','analyst'));
+  using (
+    public.current_user_role() in ('admin','manager')
+    or (public.current_user_role() = 'analyst' and created_by = (select auth.uid()))
+  );
 
 create policy "Staff can create financial projections"
   on public.financial_projection_models for insert to authenticated
@@ -38,8 +41,14 @@ create policy "Staff can create financial projections"
 
 create policy "Staff can update financial projections"
   on public.financial_projection_models for update to authenticated
-  using (public.current_user_role() in ('admin','manager','analyst'))
-  with check (public.current_user_role() in ('admin','manager','analyst'));
+  using (
+    public.current_user_role() in ('admin','manager')
+    or (public.current_user_role() = 'analyst' and created_by = (select auth.uid()))
+  )
+  with check (
+    public.current_user_role() in ('admin','manager')
+    or (public.current_user_role() = 'analyst' and created_by = (select auth.uid()))
+  );
 
 create trigger financial_projection_models_updated_at
   before update on public.financial_projection_models
