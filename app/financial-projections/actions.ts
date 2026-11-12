@@ -12,7 +12,7 @@ export async function saveProjection(form: FormData) {
   if (!user) redirect("/login");
 
   const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "manager", "analyst", "sales"].includes(profile.role)) redirect("/access-denied");
+  if (!profile || !["admin", "manager", "analyst"].includes(profile.role)) redirect("/access-denied");
 
   const companyId = value(form, "company_id");
   const businessName = value(form, "business_name");
