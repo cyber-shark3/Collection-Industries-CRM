@@ -6,6 +6,36 @@ import { createClient } from "@/lib/supabase/server";
 
 const value = (form: FormData, key: string) => String(form.get(key) ?? "").trim();
 
+function isFiveNonNegativeNumbers(value: unknown): value is number[] {
+  return Array.isArray(value) && value.length === 5 &&
+    value.every((item) => typeof item === "number" && Number.isFinite(item) && item >= 0);
+}
+
+function isLineSchedule(value: unknown): boolean {
+  return Array.isArray(value) && value.every((line) =>
+    line && typeof line === "object" &&
+    typeof (line as { label?: unknown }).label === "string" &&
+    (line as { label: string }).label.trim().length > 0 &&
+    isFiveNonNegativeNumbers((line as { values?: unknown }).values)
+  );
+}
+
+function isProjectionModel(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const model = value as Record<string, unknown>;
+  const workingCapital = model.workingCapital;
+  if (!workingCapital || typeof workingCapital !== "object") return false;
+  const wc = workingCapital as Record<string, unknown>;
+  return isLineSchedule(model.revenue) &&
+    isLineSchedule(model.cogs) &&
+    isLineSchedule(model.opex) &&
+    isLineSchedule(model.capex) &&
+    isFiveNonNegativeNumbers(wc.inventoryDays) &&
+    isFiveNonNegativeNumbers(wc.receivableDays) &&
+    isFiveNonNegativeNumbers(wc.payableDays) &&
+    isFiveNonNegativeNumbers(wc.netWorkingCapital);
+}
+
 export async function saveProjection(form: FormData) {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
@@ -23,7 +53,7 @@ export async function saveProjection(form: FormData) {
   } catch {
     redirect("/financial-projections?error=invalid-model");
   }
-  if (!companyId || !businessName || !modelData || typeof modelData !== "object") {
+  if (!companyId || !businessName || !isProjectionModel(modelData)) {
     redirect("/financial-projections?error=missing-fields");
   }
 
