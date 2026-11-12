@@ -10,7 +10,7 @@ export default async function FinancialProjectionsPage({ searchParams }: { searc
   if (!user) redirect("/login");
 
   const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "manager", "analyst", "sales"].includes(profile.role)) redirect("/access-denied");
+  if (!profile || !["admin", "manager", "analyst"].includes(profile.role)) redirect("/access-denied");
 
   const { data: companies, error } = await db.from("companies").select("id,name").order("name");
   if (error) throw new Error("Unable to load applicant businesses.");
