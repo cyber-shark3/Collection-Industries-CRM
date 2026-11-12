@@ -27,12 +27,12 @@ alter table public.financial_projection_models enable row level security;
 
 create policy "Staff can read financial projections"
   on public.financial_projection_models for select to authenticated
-  using (public.current_user_role() in ('admin','manager','analyst','sales'));
+  using (public.current_user_role() in ('admin','manager','analyst'));
 
 create policy "Staff can create financial projections"
   on public.financial_projection_models for insert to authenticated
   with check (
-    public.current_user_role() in ('admin','manager','analyst','sales')
+    public.current_user_role() in ('admin','manager','analyst')
     and created_by = (select auth.uid())
   );
 
